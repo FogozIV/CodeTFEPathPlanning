@@ -1,7 +1,10 @@
 import numpy as np
+import struct
 from matplotlib import pyplot as plt
 from packet_handler import *
 from curve_library import *
+
+from src.utils.SaveCurveListToFile import save_curve_list
 
 spi = SocketPacketInterface("mainrobotteensy.local")
 
@@ -40,4 +43,7 @@ if a.lower() == "y":
     spi.stop()
 
 else:
-    print("Bye bye")
+    a = input("Do you want to save the curve? (y/n)")
+    if a.lower() == "y":
+        save_curve_list("curve_list.bin", curve_list)
+print("Bye bye")

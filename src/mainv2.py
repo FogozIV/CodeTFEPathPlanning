@@ -2,6 +2,8 @@
 import matplotlib
 from math import sqrt
 
+from src.utils.SaveCurveListToFile import save_curve_list
+
 matplotlib.use('qt5agg')
 from src.utils.path_following import *
 from src.utils.MultiGridSolver import MultigridSolver
@@ -13,7 +15,7 @@ from simplification.cutil import simplify_coords
 
 # Create and solve a potential field
 field = PotentialFieldMap(width_m=3.0, height_m=2.0, resolution_m=0.05)
-field.set_goal(2.5, 1.5)
+field.set_goal(2.7, 1)
 field.add_obstacle(1.0, 1.0, 0.2)
 field.add_obstacle(2.0, 0.5, 0.15)
 #field.add_border()
@@ -22,7 +24,7 @@ solver = HarmonicSolver(field)
 solver.solve_SOR(max_iter=500)
 field.visualize_powered()
 field.visualize()
-start_pos = (0.1, 0.1)
+start_pos = (0.1, 1)
 start_xy = start_pos
 field_map = field
 i, j = int(start_xy[1] / field_map.resolution), int(start_xy[0] / field_map.resolution)
@@ -54,3 +56,5 @@ curve_list, path = field.get_as_curve_list(start_pos)
 print(curve_list.get_curve_count())
 plot_path_on_field(field, path)
 plt.show()
+
+save_curve_list("test.bin", curve_list)
