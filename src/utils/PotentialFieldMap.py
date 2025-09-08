@@ -4,7 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from src.utils.HarmonicSolver import HarmonicSolver
 from src.utils.path_following import get_parametrized_path, get_spline_for_parametrized_path, fit_clothoids, \
-    curve_list_to_path
+    curve_list_to_path, plot_path_on_field
 
 
 class PotentialFieldMap:
@@ -45,7 +45,7 @@ class PotentialFieldMap:
             np.linspace(0, self.width, self.nx),
             np.linspace(0, self.height, self.ny)
         )
-        Z = 1-np.power(1 - self.grid, 0.3)  # enhances low values
+        Z = 1-np.power(1 - self.grid, 0.1)  # enhances low values
 
         fig = plt.figure(figsize=(12, 8))
         ax = fig.add_subplot(111, projection='3d')
@@ -94,7 +94,7 @@ class PotentialFieldMap:
 
             grad = np.array([dU_dx, dU_dy])
             norm = np.linalg.norm(grad)
-            if norm < 1e-10:
+            if norm < 1e-14:
                 break
 
             # Move opposite to the gradient
@@ -103,9 +103,11 @@ class PotentialFieldMap:
             y += delta[1]
             path.append((x, y))
         return path
-    def get_as_curve_list(self, start_xy, step_size=0.05, max_steps=10000, stop_thresh=0.05, s=0.001, step=0.1):
+    def get_as_curve_list(self, start_xy, step_size=0.05*1000, max_steps=10000, stop_thresh=0.05, s=0.001*1000, step=0.1*1000):
         path = self.get_path(start_xy, step_size, max_steps, stop_thresh)
+        plot_path_on_field(self, path)
         param_path = get_parametrized_path(path)
+        print(param_path)
         x_k,y_k = get_spline_for_parametrized_path(param_path, s=s)
         curve_list= fit_clothoids(x_k, y_k, param_path, step)
         clothoid_path = curve_list_to_path(curve_list)

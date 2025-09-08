@@ -7,13 +7,25 @@ from curve_library import *
 from src.utils.SaveCurveListToFile import save_curve_list
 
 spi = SocketPacketInterface("mainrobotteensy.local")
-
+"""
 positions = [(0,0, 0), (1000,-200,45), (1200,400,180), (800,400, 225), (400,0, 180), (0,0,180)]
 positions = [Position(p[0], p[1], Angle.from_degrees(p[2])) for p in positions]
 
 curve_list = CurveList()
 for i in range(len(positions) -1 ):
     curve_list.add_curve(QuinticHermiteSpline.build(positions[i], positions[i+1], (positions[i+1] - positions[i]).get_distance() * 1.1))
+"""
+
+start_pos = (100,1000,0,0)
+end_pos = (2700, 1000, 0,0)
+positions = [start_pos, (523,1310, 45, 0), (940, 1430, 0, 0), (1500,1010, -45, 0), (2032,695, 0, 0), end_pos]
+
+positions = [Position(p[0], p[1], Angle.from_degrees(p[2]), p[3]) for p in positions]
+
+curve_list = CurveList()
+for i in range(len(positions) - 1):
+    curve_list.add_curve(ClothoidCurve.get_from_positions(positions[i], positions[i+1]))
+
 
 min_value = curve_list.getMinValue()
 max_value = curve_list.getMaxValue()

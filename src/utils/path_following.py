@@ -80,7 +80,26 @@ def fit_clothoids(tck_x, tck_y, parametrized_path, step=0.01):
         n_cl= ClothoidCurve.get_from_positions(Position(x_spline[i-1],y_spline[i-1],Angle.from_radians(theta_spline[i-1]), kappa_spline[i-1]), Position(x_spline[i],y_spline[i],Angle.from_radians(theta_spline[i]), kappa_spline[i]), 0.001)
         curve_list.add_curve_list(n_cl)
     return curve_list
+def fit_clothoids_from_waypoints(anchors):
+    """
+    anchors: list of (x, y, theta, kappa) states
+             - must include start and goal
+             - may include intermediate waypoints (sparse)
+    step: resolution for downstream sampling if needed
+    """
+    curve_list = CurveList()
+    for i in range(1, len(anchors)):
+        x0, y0, th0, k0 = anchors[i-1]
+        x1, y1, th1, k1 = anchors[i]
 
+        p0 = Position(x0, y0, Angle.from_radians(th0), k0)
+        p1 = Position(x1, y1, Angle.from_radians(th1), k1)
+
+        # Solve a G² clothoid interpolation between p0 and p1
+        n_cl = ClothoidCurve.get_from_positions(p0, p1)
+        curve_list.add_curve_list(n_cl)
+
+    return curve_list
 def curve_list_to_path(curve_list: CurveList, step=0.001):
     length = curve_list.getMaxValue()
     s_values = np.linspace(0, length, int(length/step))
@@ -142,6 +161,17 @@ def plot_path_on_field(field_map, path):
     plt.axis("equal")
     plt.grid(True)
 
+def plot_path(path):
+    plt.figure(figsize=(10, 8))
+    plt.plot(path[:, 0], path[:, 1], 'r.-', label="Robot Path")
+    plt.plot(path[0, 0], path[0, 1], 'bo', label="Start")
+    plt.title("Gradient Descent Path on Harmonic Field")
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.axis("equal")
+    plt.grid(True)
+
+
 def plot_clothoid_path_on_field(field_map, clothoid_path, path):
     X, Y = np.meshgrid(
         np.linspace(0, field_map.width, field_map.nx),
@@ -149,12 +179,32 @@ def plot_clothoid_path_on_field(field_map, clothoid_path, path):
     )
 
     plt.figure(figsize=(10, 8))
-    plt.contourf(X, Y, 1-(1-field_map.grid)**0.3, levels=50, cmap='viridis')
+    plt.contourf(X, Y, 1-(1-field_map.grid)**0.1, levels=50, cmap='viridis')
     plt.colorbar(label="Potential")
     path = np.array(path)
     clothoid_path = np.array(clothoid_path)
     plt.plot(path[:, 0], path[:, 1], 'r.-', label="Robot Path")
     plt.plot(path[0, 0], path[0, 1], 'bo', label="Start")
+    plt.plot(clothoid_path[:, 0], clothoid_path[:, 1], 'g.-', label="Robot Path with clothoid")
+    gx, gy = field_map.goal[1] * field_map.resolution, field_map.goal[0] * field_map.resolution
+    plt.plot(gx, gy, 'go', label="Goal")
+    plt.legend()
+    plt.title("Gradient Descent Path on Harmonic Field")
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.axis("equal")
+    plt.grid(True)
+
+def plot_clothoid_path_on_distorted_field(field_map, clothoid_path):
+    X, Y = np.meshgrid(
+        np.linspace(0, field_map.width, field_map.nx),
+        np.linspace(0, field_map.height, field_map.ny)
+    )
+
+    plt.figure(figsize=(10, 8))
+    plt.contourf(X, Y, 1 - (1 - field_map.grid) ** 0.1, levels=50, cmap='viridis')
+    plt.colorbar(label="Potential")
+    clothoid_path = np.array(clothoid_path)
     plt.plot(clothoid_path[:, 0], clothoid_path[:, 1], 'g.-', label="Robot Path with clothoid")
     gx, gy = field_map.goal[1] * field_map.resolution, field_map.goal[0] * field_map.resolution
     plt.plot(gx, gy, 'go', label="Goal")
